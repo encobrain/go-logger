@@ -11,7 +11,7 @@ type h struct {
 }
 
 type Log struct {
-	fields 		Fields
+	fields 		map[string]interface{}
 	fbits  		uint64
 
 	handlers 	[]h
@@ -41,7 +41,7 @@ func (l *Log) AddHandler (handler IHandler) *Log {
 	}
 	
 	log := &Log{
-		fields:   Fields{},
+		fields:   map[string]interface{}{},
 		fbits:    l.fbits,
 		handlers: append(l.handlers, h{handler: handler, mask:mask}),
 		fBitMap:  l.fBitMap,
@@ -56,9 +56,15 @@ func (l *Log) AddHandler (handler IHandler) *Log {
   	return log
 }
 
-func (l *Log) Fields (fields Fields) *Log {
+func (l *Log) Fields (fields ...interface{}) *Log {
+	le := len(fields)
+
+	if le % 2 != 0 {
+		panic("fields count should be even")
+	}
+
  	log := &Log{
- 		fields:     Fields{},
+ 		fields:     map[string]interface{}{},
  		fbits :		l.fbits,
  		handlers:	l.handlers,
  		fBitMap: 	l.fBitMap,
@@ -69,7 +75,13 @@ func (l *Log) Fields (fields Fields) *Log {
 		log.fields[f] = v
 	}
 
-	for f,v := range fields {
+	i := 0
+
+	for i<le {
+		f,ok := fields[i].(string); i++
+		if !ok { panic("field name must be string") }
+		
+		v := fields[i]; i++
 		log.fields[f]=v
 		log.fbits |= log.fBitMap[f]
 	}
@@ -78,23 +90,23 @@ func (l *Log) Fields (fields Fields) *Log {
 }
 
 func (l *Log) Trace (message string) {
-	l.Fields(Fields{"_datetime": time.Now(), "_level": "trace", "_message": message}).Handle()
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
 }
 
 func (l *Log) Debug (message string) {
-	l.Fields(Fields{"_datetime": time.Now(), "_level": "debug", "_message": message}).Handle()
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
 }
 
 func (l *Log) Info (message string) {
-	l.Fields(Fields{"_datetime": time.Now(), "_level": "info", "_message": message}).Handle()
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
 }
 
 func (l *Log) Warn (message string) {
-	l.Fields(Fields{"_datetime": time.Now(), "_level": "warn", "_message": message}).Handle()
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
 }
 
 func (l *Log) Error (message string) {
-	l.Fields(Fields{"_datetime": time.Now(), "_level": "error", "_message": message}).Handle()
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
 }
 
 
@@ -133,7 +145,7 @@ func (l *Log) Handle () {
 		fmt.Printf("%#v\n", fields)
 	} else {
 		for _,h := range handlers {
-			h.Handle(l, &fields)
+			h.Handle(l, fields)
 		}
 	}
 

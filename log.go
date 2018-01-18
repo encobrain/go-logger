@@ -89,24 +89,24 @@ func (l *Log) Fields (fields ...interface{}) *Log {
  	return log
 }
 
-func (l *Log) Trace (message string) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
+func (l *Log) Trace (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Debug (message string) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
+func (l *Log) Debug (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "debug", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Info (message string) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
+func (l *Log) Info (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "info", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Warn (message string) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
+func (l *Log) Warn (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "warn", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Error (message string) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", message).Handle()
+func (l *Log) Error (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "error", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
 

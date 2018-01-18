@@ -109,6 +109,10 @@ func (l *Log) Error (format string, args ...interface{}) {
 	l.Fields("_datetime", time.Now(), "_level", "error", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
+func (l *Log) Panic (format string, args ...interface{}) {
+	l.Fields("_datetime", time.Now(), "_level", "panic", "_message", fmt.Sprintf(format, args)).Handle()
+}
+
 
 func (l *Log) Handle () {
 	fbits := l.fbits

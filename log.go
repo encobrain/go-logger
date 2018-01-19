@@ -89,40 +89,42 @@ func (l *Log) Fields (fields ...interface{}) *Log {
  	return log
 }
 
-func (l *Log) Trace (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "trace", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Tracef (format string, args ...interface{}) {
+	l.Fields("_level", "trace", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Debug (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "debug", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Debugf (format string, args ...interface{}) {
+	l.Fields("_level", "debug", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Info (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "info", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Infof (format string, args ...interface{}) {
+	l.Fields("_level", "info", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Warn (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "warn", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Warnf (format string, args ...interface{}) {
+	l.Fields("_level", "warn", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Error (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "error", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Errorf (format string, args ...interface{}) {
+	l.Fields("_level", "error", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
-func (l *Log) Panic (format string, args ...interface{}) {
-	l.Fields("_datetime", time.Now(), "_level", "panic", "_message", fmt.Sprintf(format, args)).Handle()
+func (l *Log) Panicf (format string, args ...interface{}) {
+	l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args)).Handle()
 }
 
 
 func (l *Log) Handle () {
-	fbits := l.fbits
-	fields := l.fields
+	log := l.Fields("_datetime", time.Now())
 
-	handlers := l.fbitsCache[fbits]
+	fbits := log.fbits
+	fields := log.fields
+
+	handlers := log.fbitsCache[fbits]
 
 	if handlers == nil {
 		next:
-		for _,h := range l.handlers {
+		for _,h := range log.handlers {
 			if h.mask & fbits == h.mask {
 				handler := h.handler
 
@@ -142,14 +144,14 @@ func (l *Log) Handle () {
 			}
 		}
 
-		l.fbitsCache[l.fbits] = handlers
+		log.fbitsCache[log.fbits] = handlers
 	}
 
 	if len(handlers) == 0 {
 		fmt.Printf("%#v\n", fields)
 	} else {
 		for _,h := range handlers {
-			h.Handle(l, fields)
+			h.Handle(log, fields)
 		}
 	}
 

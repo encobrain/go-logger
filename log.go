@@ -37,7 +37,7 @@ func (l *Log) AddHandler (handler IHandler) *Log {
 
 	var mask uint64
 
-	for f := range handler.Fields() {
+	for _,f := range handler.UsedFields() {
 		bit := l.fBitMap[f]
 
 		if bit == 0 {
@@ -162,24 +162,9 @@ func (l *Log) Handle () {
 	handlers := log.fbitsCache[fbits]
 
 	if handlers == nil {
-		next:
 		for _,h := range log.handlers {
 			if h.mask & fbits == h.mask {
-				handler := h.handler
-
-				for f,v := range handler.Fields() {
-					if v != "*" {
-						fv,ok := fields[f].(string)
-
-						if !ok || fv != v {
-							continue next
-						}
-					}
-				}
-
-				handlers = append(handlers, handler)
-
-				if handler.Final() { break }
+				handlers = append(handlers, h.handler)
 			}
 		}
 
@@ -190,11 +175,9 @@ func (l *Log) Handle () {
 		fmt.Printf("%#v\n", fields)
 	} else {
 		for _,h := range handlers {
-			h.Handle(log, fields)
+			if h.Handle(log, fields) { break }
 		}
 	}
-
-
 }
 
 

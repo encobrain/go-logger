@@ -90,27 +90,27 @@ func (l *Log) Fields (fields ...interface{}) *Log {
 }
 
 func (l *Log) Tracef (format string, args ...interface{}) {
-	l.Fields("_level", "trace", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "trace", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 func (l *Log) Debugf (format string, args ...interface{}) {
-	l.Fields("_level", "debug", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "debug", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 func (l *Log) Infof (format string, args ...interface{}) {
-	l.Fields("_level", "info", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "info", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 func (l *Log) Warnf (format string, args ...interface{}) {
-	l.Fields("_level", "warn", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "warn", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 func (l *Log) Errorf (format string, args ...interface{}) {
-	l.Fields("_level", "error", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "error", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 func (l *Log) Panicf (format string, args ...interface{}) {
-	l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args)).Handle()
+	l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args...)).Handle()
 }
 
 

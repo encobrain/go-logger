@@ -92,10 +92,16 @@ func (l *Log) Fields (fields ...interface{}) *Log {
 	for i<le {
 		f,ok := fields[i].(string); i++
 		if !ok { panic("field name must be string") }
-		
+
+		bit := log.fBitMap[f]
+		log.fbits |= bit
 		v := fields[i]; i++
-		log.fields[f]=v
-		log.fbits |= log.fBitMap[f]
+		if v == nil {
+			log.fbits ^= bit
+			delete(log.fields, f)
+		} else {
+			log.fields[f]=v
+		}
 	}
 
  	return log

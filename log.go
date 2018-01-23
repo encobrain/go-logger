@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"log"
 )
 
 var GOROOT string
@@ -145,8 +146,12 @@ func (l *Log) Panicf (format string, args ...interface{}) {
 
 
 func (l *Log) Handle () {
-	log := l.Fields("_datetime", time.Now())
-
+	log := l
+	
+	if _,ok := l.fields["_datetime"]; !ok {
+		log = l.Fields("_datetime", time.Now())
+	}
+	
 	if file,ok := log.fields["_file"]; !ok {
 		_,file,line,ok := runtime.Caller(1)
 		if ok {

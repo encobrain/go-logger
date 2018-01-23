@@ -3,7 +3,19 @@ package logger
 import (
 	"time"
 	"fmt"
+	"runtime"
+	"strings"
 )
+
+var GOROOT string
+
+func init() {
+	_,file,_,ok := runtime.Caller(0)
+
+	if !ok { panic("Cant get GOROOT") }
+
+	GOROOT = strings.Replace(file, "github.com/encobrain/go-logger/log.go", "",-1)
+}
 
 type h struct {
 	handler IHandler
@@ -90,32 +102,59 @@ func (l *Log) Fields (fields ...interface{}) *Log {
 }
 
 func (l *Log) Tracef (format string, args ...interface{}) {
-	l.Fields("_level", "trace", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "trace", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 func (l *Log) Debugf (format string, args ...interface{}) {
-	l.Fields("_level", "debug", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "debug", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 func (l *Log) Infof (format string, args ...interface{}) {
-	l.Fields("_level", "info", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "info", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 func (l *Log) Warnf (format string, args ...interface{}) {
-	l.Fields("_level", "warn", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "warn", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 func (l *Log) Errorf (format string, args ...interface{}) {
-	l.Fields("_level", "error", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "error", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 func (l *Log) Panicf (format string, args ...interface{}) {
-	l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args...)).Handle()
+	log := l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args...))
+	_,file,line,ok := runtime.Caller(1)
+	if ok { log = log.Fields("_file", file, "_line", line) }
+	log.Handle()
 }
 
 
 func (l *Log) Handle () {
 	log := l.Fields("_datetime", time.Now())
+
+	if file,ok := log.fields["_file"]; !ok {
+		_,file,line,ok := runtime.Caller(1)
+		if ok {
+			log = log.Fields("_file", strings.Replace(file, GOROOT, "", -1), "_line", line)
+		}
+	} else {
+		log.fields["_file"] = strings.Replace(file.(string), GOROOT, "", -1)
+	}
 
 	fbits := log.fbits
 	fields := log.fields

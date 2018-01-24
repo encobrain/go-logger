@@ -150,7 +150,7 @@ func (l *Log) Panicf (format string, args ...interface{}) {
 
 	if ok {
 		for ok {
-			stack = append(stack, struct {File string;Line int}{file,line})
+			stack = append(stack, struct {File string;Line int}{strings.Replace(file, GOROOT, "", -1),line})
 			skip++
 			_,file,line,ok = runtime.Caller(skip)
 		}

@@ -171,7 +171,7 @@ func (l *Log) Handle () {
 
 	handlers := log.fbitsCache[fbits]
 
-	if handlers == nil {
+	if handlers == nil && log.fbitsCache != nil {
 		for _,h := range log.handlers {
 			if h.mask & fbits == h.mask {
 				handlers = append(handlers, h.handler)

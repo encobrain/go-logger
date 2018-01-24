@@ -144,8 +144,19 @@ func (l *Log) Errorf (format string, args ...interface{}) {
 
 func (l *Log) Panicf (format string, args ...interface{}) {
 	log := l.Fields("_level", "panic", "_message", fmt.Sprintf(format, args...))
-	_,file,line,ok := runtime.Caller(1)
-	if ok { log = log.Fields("_file", file, "_line", line) }
+	skip := 1
+	var stack []struct{file string; line int}
+	_,file,line,ok := runtime.Caller(skip)
+
+	if ok {
+		for ok {
+			stack = append(stack, struct {file string;line int}{file,line})
+			skip++
+			_,file,line,ok = runtime.Caller(skip)
+		}
+		log = log.Fields("_file", stack[0].file, "_line", stack[0].line, "_stack", stack)
+	}
+
 	log.Handle()
 }
 

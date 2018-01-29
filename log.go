@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 var GOROOT string
@@ -23,48 +24,55 @@ type h struct {
 }
 
 type Log struct {
-	fields 		map[string]interface{}
-	fbits  		uint64
+	fields 			map[string]interface{}
+	fbits  			uint64
 
-	handlers 	[]h
-	fBitMap  	map[string]uint64
+	handlers 		[]h
+	fBitMap  		map[string]uint64
 
-	fbitsCache 	map[uint64][]IHandler
+	fbitsCache 		map[uint64][]IHandler
+	fbitsCache_mu   *sync.RWMutex
 }
 
 func (l *Log) AddHandler (handler IHandler) *Log {
 	if l.fBitMap == nil { l.fBitMap = map[string]uint64{} }
 
-	var mask uint64
-
-	for _,f := range handler.UsedFields() {
-		bit := l.fBitMap[f]
-
-		if bit == 0 {
-			le := len(l.fBitMap)
-			if le>=64 { panic("Too many used fields: >64") }
-
-			bit = 1 << uint(le)
-
-			l.fBitMap[f]=bit
-		}
-
-		mask |= bit
-	}
-	
 	log := &Log{
-		fields:   map[string]interface{}{},
-		fbits:    l.fbits,
-		handlers: append(l.handlers, h{handler: handler, mask:mask}),
-		fBitMap:  l.fBitMap,
+		fields:   		map[string]interface{}{},
+		fbits:    		l.fbits,
+		fBitMap:  		map[string]uint64{},
 
-		fbitsCache: map[uint64][]IHandler{},
+		fbitsCache: 	map[uint64][]IHandler{},
+		fbitsCache_mu: 	&sync.RWMutex{},
+	}
+
+	for f,mask := range l.fBitMap {
+		log.fBitMap[f] = mask
 	}
 
 	for f,v := range l.fields {
 		log.fields[f]=v
 	}
 
+	var mask uint64
+
+	for _,f := range handler.UsedFields() {
+		bit := log.fBitMap[f]
+
+		if bit == 0 {
+			le := len(log.fBitMap)
+			if le>=64 { panic("Too many used fields: >64") }
+
+			bit = 1 << uint(le)
+
+			log.fBitMap[f]=bit
+		}
+
+		mask |= bit
+	}
+
+	log.handlers = append(l.handlers, h{handler: handler, mask:mask})
+	
   	return log
 }
 
@@ -76,11 +84,12 @@ func (l *Log) Fields (fields ...interface{}) *Log {
 	}
 
  	log := &Log{
- 		fields:     map[string]interface{}{},
- 		fbits :		l.fbits,
- 		handlers:	l.handlers,
- 		fBitMap: 	l.fBitMap,
- 		fbitsCache: l.fbitsCache,
+ 		fields:     	map[string]interface{}{},
+ 		fbits :			l.fbits,
+ 		handlers:		l.handlers,
+ 		fBitMap: 		l.fBitMap,
+ 		fbitsCache: 	l.fbitsCache,
+ 		fbitsCache_mu: 	l.fbitsCache_mu,
 	}
 
 	for f,v := range l.fields {
@@ -180,18 +189,28 @@ func (l *Log) Handle () {
 	fbits := log.fbits
 	fields := log.fields
 
-	handlers := log.fbitsCache[fbits]
+	var handlers []IHandler
 
-	if handlers == nil && log.fbitsCache != nil {
-		for _,h := range log.handlers {
-			if h.mask & fbits == h.mask {
-				handlers = append(handlers, h.handler)
+	mu := log.fbitsCache_mu
+	
+	if mu != nil {
+		mu.RLock()
+		handlers = log.fbitsCache[fbits]
+		mu.RUnlock()
+		
+		if handlers == nil && log.fbitsCache != nil {
+			for _,h := range log.handlers {
+				if h.mask & fbits == h.mask {
+					handlers = append(handlers, h.handler)
+				}
 			}
+
+			mu.Lock()
+			log.fbitsCache[log.fbits] = handlers
+			mu.Unlock()
 		}
-
-		log.fbitsCache[log.fbits] = handlers
 	}
-
+	
 	if len(handlers) == 0 {
 		fmt.Printf("%#v\n", fields)
 	} else {

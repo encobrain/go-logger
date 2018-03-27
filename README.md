@@ -5,20 +5,14 @@ package main
 
 import "github.com/encobrain/go-logger"
 
-type handler struct {
-	
+type handler struct {}
+
+func (h *handler) UsedFields () []string {
+	return []string{}
 }
 
-func (h *handler) Fields () map[string]string {
-	return map[string]string{}
-}
-
-func (h *handler) Final () bool {
-	return false
-}
-
-func (h *handler) Handle (log *logger.Log, fields *logger.Fields) {
-    	
+func (h *handler) Handle (log *logger.Log, fields map[string]interface{}) (final bool) {
+    return false	
 }
 
 func main() {
@@ -26,13 +20,13 @@ func main() {
 	
 	log = log.AddHandler(&handler{})
 	
-	log.Fields(logger.Fields{})
+	log = log.Fields("abc", 123)
    
-    log.Trace("some log text")
-    log.Debug("some log text")
-    log.Info("some log text")
-    log.Warn("some log text")
-    log.Error("some log text")	
+    log.Tracef("some log text")
+    log.Debugf("some log text")
+    log.Infof("some log text")
+    log.Warnf("some log text")
+    log.Errorf("some log text")	
     
     log.Handle()
 }

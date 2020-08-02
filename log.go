@@ -169,6 +169,14 @@ func (l *Log) Panicf (format string, args ...interface{}) {
 	log.Handle()
 }
 
+func (l *Log) Stack(stack []struct {File string; Line string}) *Log {
+	for _, fl := range stack {
+		fl.File = strings.Replace(fl.File, GOROOT, "", -1)
+	}
+
+	return l.Fields("_file", stack[0].File, "_line", stack[0].Line, "_stack", stack)
+}
+
 
 func (l *Log) Handle () {
 	log := l
